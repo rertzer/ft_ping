@@ -19,4 +19,5 @@ typedef struct {
 
 options_t parse_args(int argc, char** argv, char** host_param);
 void	  parsing_exit(char* path, options_t* opt);
+void	  print_help();
 #endif

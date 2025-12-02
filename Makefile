@@ -11,6 +11,7 @@ INC_DIR := includes/
 INC := -I ../includes/
 
 SOURCES := \
+	help.c \
 	parsing.c \
 	main.c
 

@@ -10,7 +10,7 @@ options_t parse_args(int argc, char** argv, char** host_param) {
 	options_t opt = {FALSE, FALSE, TRUE, 0};
 
 	for (int i = 1; i < argc; ++i) {
-		if (parse_one_arg(argv[i], &opt, host_param) != 0) {
+		if ((parse_one_arg(argv[i], &opt, host_param) != 0) || opt.help == TRUE) {
 			return (opt);
 		}
 	}
