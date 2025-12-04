@@ -11,8 +11,11 @@ INC_DIR := includes/
 INC := -I ../includes/
 
 SOURCES := \
+	exit.c \
 	help.c \
+	icmp.c \
 	parsing.c \
+	ping.c \
 	main.c
 
 OBJ := $(SOURCES:.c=.o)

@@ -11,6 +11,11 @@ void print_help() {
 		"Mandatory or optional arguments to long options are also mandatory or optional\n"
 		"for any corresponding short options.\n\n"
 		"Options marked with (root only) are available only to superuser.\n\n"
-		"Report bugs to <rertzer.students@42.fr>.";
+		"Report bugs to <rertzer@student.42.fr>.";
 	printf("%s", help_string);
+}
+
+void error_exit(const char* const error_message) {
+	fprintf(stderr, "FT_PING ERROR: %s\n", error_message);
+	exit(1);
 }

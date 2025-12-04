@@ -12,6 +12,7 @@ int main(int argc, char** argv) {
 		print_help();
 		return (0);
 	}
+	int ret_value = ft_ping(opt.verbose, host_arg);
 
-	return (0);
+	return (ret_value);
 }

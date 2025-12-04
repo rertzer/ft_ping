@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <string.h>
 #include "ft_ping.h"
 
 static int		   parse_one_arg(char* arg, options_t* opt, char** host_param);
@@ -52,19 +50,4 @@ static int parse_option(char* arg, options_t* opt) {
 
 static inline void parse_host(char* arg, char** host_param) {
 	*host_param = arg;
-}
-
-void parsing_exit(char* path, options_t* opt) {
-	switch (opt->valid) {
-		case FALSE:
-			fprintf(stderr, "%s: invalid option -- '%c'\n", path, opt->bad_option);
-			break;
-		case MISSING:
-			fprintf(stderr, "ft_ping: missing host operand\n");
-			break;
-		default:
-			break;
-	}
-	fprintf(stderr, "Try ft_ping -?' for more information.\n");
-	exit(PARSING_ERROR);
 }
