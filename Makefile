@@ -1,5 +1,5 @@
 CC := cc
-FLAGS := -Wall -Wextra -Werror -o3
+FLAGS := -Wall -Wextra -Werror -O3 -g3
 
 NAME := ft_ping 
 
@@ -13,9 +13,12 @@ INC := -I ../includes/
 SOURCES := \
 	exit.c \
 	help.c \
+	host.c \
 	icmp.c \
 	parsing.c \
 	ping.c \
+	signals.c \
+	socket.c \
 	main.c
 
 OBJ := $(SOURCES:.c=.o)

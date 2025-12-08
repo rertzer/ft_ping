@@ -5,6 +5,7 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -32,11 +33,23 @@ typedef struct {
 	uint16_t seq_nb;
 } icmp_info_t;
 
-options_t		 parse_args(int argc, char** argv, char** host_param);
-void			 parsing_exit(char* path, options_t* opt);
-void			 print_help();
-int				 ft_ping(int verbose, const char* const hostname);
-struct addrinfo* get_host_info(const char* const hostname);
-void			 error_exit(const char* const error_message);
-void			 get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info);
+typedef struct {
+	int				   fd;
+	socklen_t		   len;
+	struct sockaddr_in addr;
+} socket_t;
+
+options_t parse_args(int argc, char** argv, char** host_param);
+void	  parsing_exit(char* path, options_t* opt);
+bool	  valid_parsing(options_t* opt);
+void	  print_help();
+int		  ft_ping(int verbose, const char* const hostname);
+void	  init_host(const char* const hostname);
+void	  error_exit(const char* const error_message);
+void	  get_icmp_packet(struct icmp* icmp);
+void	  init_icmp_info();
+void	  update_icmp_info();
+void	  init_signals();
+void	  send_icmp(int sig);
+void	  init_socket();
 #endif
