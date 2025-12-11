@@ -6,16 +6,14 @@
 
 #include "ft_ping.h"
 
-struct addrinfo*	host;
-struct sockaddr_in* host_addr;
-
 static struct addrinfo* get_host_info(const char* const hostname);
 
-void init_host(const char* const hostname) {
-	host = get_host_info(hostname);
-	host_addr = (struct sockaddr_in*)host->ai_addr;
+struct sockaddr_in* init_host(const char* const hostname) {
+	struct addrinfo*	host = get_host_info(hostname);
+	struct sockaddr_in* host_addr = (struct sockaddr_in*)host->ai_addr;
 	printf("Host name: %s, port: %u, address: %s\n", host->ai_canonname, host_addr->sin_port,
 		   inet_ntoa(host_addr->sin_addr));
+	return (host_addr);
 }
 
 static struct addrinfo* get_host_info(const char* const hostname) {

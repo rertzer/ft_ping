@@ -21,6 +21,8 @@
 #define ICMP_PAYLOAD_SIZE 56
 #define ICMP_PACKET_SIZE ICMP_PAYLOAD_SIZE + ICMP_HEADER_SIZE
 
+#define SELECT_MAX_FD 4
+
 typedef struct {
 	uint8_t verbose;
 	uint8_t help;
@@ -39,17 +41,23 @@ typedef struct {
 	struct sockaddr_in addr;
 } socket_t;
 
-options_t parse_args(int argc, char** argv, char** host_param);
-void	  parsing_exit(char* path, options_t* opt);
-bool	  valid_parsing(options_t* opt);
-void	  print_help();
-int		  ft_ping(int verbose, const char* const hostname);
-void	  init_host(const char* const hostname);
-void	  error_exit(const char* const error_message);
-void	  get_icmp_packet(struct icmp* icmp);
-void	  init_icmp_info();
-void	  update_icmp_info();
-void	  init_signals();
-void	  send_icmp(int sig);
-void	  init_socket();
+options_t			parse_args(int argc, char** argv, char** host_param);
+void				parsing_exit(char* path, options_t* opt);
+bool				valid_parsing(options_t* opt);
+void				print_help();
+int					ft_ping(int verbose, const char* const hostname);
+struct sockaddr_in* init_host(const char* const hostname);
+void				error_exit(const char* const error_message);
+void				get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info);
+icmp_info_t			init_icmp_info();
+void				update_icmp_info(icmp_info_t* icmp_info);
+void				init_signals();
+sigset_t			init_sigmask();
+void				send_icmp(icmp_info_t* icmp_info);
+void				set_send_next(int sig);
+socket_t			init_socket();
+fd_set				init_fd_set(int fd);
+fd_set*				set_writefd(fd_set* active);
+void				read_socket(socket_t sock);
+void write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t icmp_info);
 #endif

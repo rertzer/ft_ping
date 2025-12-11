@@ -6,15 +6,13 @@
 
 #include "ft_ping.h"
 
-icmp_info_t icmp_info;
-
 static uint16_t get_icmp_checksum(uint16_t* icmp);
 
-void get_icmp_packet(struct icmp* icmp) {
+void get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info) {
 	icmp->icmp_type = ICMP_ECHO;
 	icmp->icmp_code = 0;
-	icmp->icmp_id = icmp_info.pid;
-	icmp->icmp_seq = icmp_info.seq_nb;
+	icmp->icmp_id = icmp_info->pid;
+	icmp->icmp_seq = icmp_info->seq_nb;
 	memset(icmp->icmp_data, 0xa5, ICMP_PAYLOAD_SIZE);
 	gettimeofday((struct timeval*)icmp->icmp_data, NULL);
 	icmp->icmp_cksum = 0;
@@ -32,11 +30,13 @@ static uint16_t get_icmp_checksum(uint16_t* icmp) {
 	return ((uint16_t)sum);
 }
 
-void init_icmp_info() {
+icmp_info_t init_icmp_info() {
+	icmp_info_t icmp_info;
 	icmp_info.pid = getpid();
-	icmp_info.seq_nb = 0;
+	icmp_info.seq_nb = 1;
+	return (icmp_info);
 }
 
-void update_icmp_info() {
-	++(icmp_info.seq_nb);
+void update_icmp_info(icmp_info_t* icmp_info) {
+	++(icmp_info->seq_nb);
 }
