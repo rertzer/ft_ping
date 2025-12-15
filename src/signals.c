@@ -22,20 +22,14 @@ void init_signals() {
 void set_send_next(int sig) {
 	(void)sig;
 	send_next = true;
+	printf("send next ON\n");
 	alarm(1);
 }
 
-void send_icmp(icmp_info_t* icmp_info) {
-	char		 buff[ICMP_PACKET_SIZE];
-	struct icmp* icmp = (struct icmp*)buff;
-
-	get_icmp_packet(icmp, icmp_info);
-	update_icmp_info(icmp_info);
-}
 sigset_t init_sigmask() {
 	sigset_t sigmask;
-	sigemptyset(&sigmask);
-	sigaddset(&sigmask, SIGALRM);
-	sigaddset(&sigmask, SIGINT);
+	sigfillset(&sigmask);
+	sigdelset(&sigmask, SIGALRM);
+	sigdelset(&sigmask, SIGINT);
 	return (sigmask);
 }

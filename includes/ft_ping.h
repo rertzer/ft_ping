@@ -19,7 +19,7 @@
 
 #define ICMP_HEADER_SIZE 8
 #define ICMP_PAYLOAD_SIZE 56
-#define ICMP_PACKET_SIZE ICMP_PAYLOAD_SIZE + ICMP_HEADER_SIZE
+#define ICMP_PACKET_SIZE (ICMP_PAYLOAD_SIZE + ICMP_HEADER_SIZE)
 
 #define SELECT_MAX_FD 4
 
@@ -51,13 +51,13 @@ void				error_exit(const char* const error_message);
 void				get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info);
 icmp_info_t			init_icmp_info();
 void				update_icmp_info(icmp_info_t* icmp_info);
+void				print_icmp(const struct icmp* icmp);
 void				init_signals();
 sigset_t			init_sigmask();
 void				send_icmp(icmp_info_t* icmp_info);
 void				set_send_next(int sig);
 socket_t			init_socket();
 fd_set				init_fd_set(int fd);
-fd_set*				set_writefd(fd_set* active);
 void				read_socket(socket_t sock);
-void write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t icmp_info);
+void write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp_info);
 #endif
