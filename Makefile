@@ -19,6 +19,7 @@ SOURCES := \
 	ping.c \
 	signals.c \
 	socket.c \
+	stats.c \
 	main.c
 
 OBJ := $(SOURCES:.c=.o)

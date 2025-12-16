@@ -41,6 +41,16 @@ typedef struct {
 	struct sockaddr_in addr;
 } socket_t;
 
+typedef struct {
+	int	  transmitted;
+	int	  received;
+	int	  loss;
+	float min;
+	float max;
+	float avg;
+	float stddev;
+} stats_t;
+
 options_t			parse_args(int argc, char** argv, char** host_param);
 void				parsing_exit(char* path, options_t* opt);
 bool				valid_parsing(options_t* opt);
@@ -51,13 +61,15 @@ void				error_exit(const char* const error_message);
 void				get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info);
 icmp_info_t			init_icmp_info();
 void				update_icmp_info(icmp_info_t* icmp_info);
-void				print_icmp(const struct icmp* icmp);
+void				print_icmp(const struct icmp* icmp, uint8_t ttl, float time);
 void				init_signals();
 sigset_t			init_sigmask();
 void				send_icmp(icmp_info_t* icmp_info);
 void				set_send_next(int sig);
 socket_t			init_socket();
 fd_set				init_fd_set(int fd);
-void				read_socket(socket_t sock);
-void write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp_info);
+float				read_socket(socket_t sock);
+void				init_stats(stats_t* stats);
+void				update_stats(stats_t* stats, float time);
+int write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp_info);
 #endif

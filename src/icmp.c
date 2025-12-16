@@ -41,7 +41,7 @@ void update_icmp_info(icmp_info_t* icmp_info) {
 	++(icmp_info->seq_nb);
 }
 
-void print_icmp(const struct icmp* icmp) {
-	printf("\ntype: %hu code: %hu, pid: %d, seq: %d\n", icmp->icmp_type, icmp->icmp_code,
-		   ntohs(icmp->icmp_id), ntohs(icmp->icmp_seq));
+void print_icmp(const struct icmp* icmp, uint8_t ttl, float time) {
+	printf("\ntype: %hu code: %hu, pid: %d, seq: %d %d delay %4.2f \n", icmp->icmp_type,
+		   icmp->icmp_code, ntohs(icmp->icmp_id), ntohs(icmp->icmp_seq), ttl, time);
 }

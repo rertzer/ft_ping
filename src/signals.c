@@ -1,5 +1,4 @@
 #include <signal.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
@@ -22,7 +21,6 @@ void init_signals() {
 void set_send_next(int sig) {
 	(void)sig;
 	send_next = true;
-	printf("send next ON\n");
 	alarm(1);
 }
 

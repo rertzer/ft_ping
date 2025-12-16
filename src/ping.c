@@ -1,8 +1,12 @@
+#include <arpa/inet.h>
 #include <errno.h>
+#include <limits.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
 #include "ft_ping.h"
 
 extern bool send_next;
@@ -16,27 +20,23 @@ int ft_ping(int verbose, const char* const hostname) {
 	socket_t			sock = init_socket();
 	fd_set				active = init_fd_set(sock.fd);
 	sigset_t			sigmask = init_sigmask();
-	printf("sock_fd is %d\n", sock.fd);
+	stats_t				stats = {0, 0, 0, 0.0, 3.0e+38F, 0.0, 0.0};
 	init_signals();
-	printf("ft ping\n");
+	printf("PING %s (%s): 56 data bytes\n", hostname, inet_ntoa(host_addr->sin_addr));
 	while (the_end == false) {
-		printf("while loop\n");
 		fd_set* readfd = &active;
-		// printf("start pselect, writefd ready ? %d\n", ok);
-		int fd_nb = pselect(SELECT_MAX_FD, readfd, NULL, NULL, NULL, &sigmask);
-		printf("inside pselect, received %d\n", fd_nb);
-		printf("error %d: %s\n", errno, strerror(errno));
+		int		fd_nb = pselect(SELECT_MAX_FD, readfd, NULL, NULL, NULL, &sigmask);
 		if (fd_nb > 0) {
-			printf("read_socket\n");
 			if (FD_ISSET(sock.fd, readfd)) {
-				printf("read_socket\n");
-				read_socket(sock);
+				float time = read_socket(sock);
+				update_stats(&stats, time);
 			}
 		} else if (send_next == true) {
-			printf("write_socket\n");
-			write_socket(sock, host_addr, &icmp_info);
+			int sent = write_socket(sock, host_addr, &icmp_info);
+			if (sent) {
+				stats.transmitted += sent;
+			}
 			send_next = false;
-			printf("send_next OFF\n");
 		}
 	}
 	return (0);
