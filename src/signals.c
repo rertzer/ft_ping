@@ -15,6 +15,7 @@ void init_signals() {
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
 	sigaction(SIGALRM, &sa, NULL);
+	signal(SIGINT, set_the_end);
 	alarm(1);
 }
 
@@ -22,6 +23,11 @@ void set_send_next(int sig) {
 	(void)sig;
 	send_next = true;
 	alarm(1);
+}
+
+void set_the_end(int sig) {
+	(void)sig;
+	the_end = true;
 }
 
 sigset_t init_sigmask() {

@@ -20,7 +20,8 @@ int ft_ping(int verbose, const char* const hostname) {
 	socket_t			sock = init_socket();
 	fd_set				active = init_fd_set(sock.fd);
 	sigset_t			sigmask = init_sigmask();
-	stats_t				stats = {0, 0, 0, 0.0, 3.0e+38F, 0.0, 0.0};
+	stats_t				stats;
+	init_stats(&stats);
 	init_signals();
 	printf("PING %s (%s): 56 data bytes\n", hostname, inet_ntoa(host_addr->sin_addr));
 	while (the_end == false) {
@@ -39,6 +40,7 @@ int ft_ping(int verbose, const char* const hostname) {
 			send_next = false;
 		}
 	}
+	printf("this is the end my friend\n");
 	return (0);
 }
 
