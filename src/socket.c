@@ -22,7 +22,7 @@ socket_t init_socket() {
 	return (sock);
 }
 
-float read_socket(socket_t sock) {
+float read_socket(socket_t sock, uint16_t pid) {
 	char	buff[500];
 	ssize_t len = recv(sock.fd, buff, 500, 0);
 	float	time = NAN;
@@ -30,9 +30,12 @@ float read_socket(socket_t sock) {
 		uint8_t		 ttl = *((uint8_t*)buff + 8);
 		uint8_t*	 source_p = ((uint8_t*)buff + 12);
 		struct icmp* icmp = (struct icmp*)((uint8_t*)buff + 20);
-		time = get_time((struct icmp*)icmp);
-		printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", len - 20,
-			   inet_ntoa(*(struct in_addr*)source_p), ntohs(icmp->icmp_seq), ttl, time);
+		int			 recv_id = ntohs(icmp->icmp_id);
+		if (recv_id == pid) {
+			time = get_time((struct icmp*)icmp);
+			printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", len - 20,
+				   inet_ntoa(*(struct in_addr*)source_p), ntohs(icmp->icmp_seq), ttl, time);
+		}
 	} else {
 		printf("read error %ld\n", len);
 	}

@@ -68,7 +68,7 @@ void				set_send_next(int sig);
 void				set_the_end(int sig);
 socket_t			init_socket();
 fd_set				init_fd_set(int fd);
-float				read_socket(socket_t sock);
+float				read_socket(socket_t sock, uint16_t pid);
 void				init_stats(stats_t* stats);
 void				update_stats(stats_t* stats, float time);
 int write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp_info);

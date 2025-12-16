@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -29,8 +30,10 @@ int ft_ping(int verbose, const char* const hostname) {
 		int		fd_nb = pselect(SELECT_MAX_FD, readfd, NULL, NULL, NULL, &sigmask);
 		if (fd_nb > 0) {
 			if (FD_ISSET(sock.fd, readfd)) {
-				float time = read_socket(sock);
-				update_stats(&stats, time);
+				float time = read_socket(sock, icmp_info.pid);
+				if (time != NAN) {
+					update_stats(&stats, time);
+				}
 			}
 		} else if (send_next == true) {
 			int sent = write_socket(sock, host_addr, &icmp_info);
