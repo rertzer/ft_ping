@@ -29,7 +29,7 @@ DEPS := $(OBJS:.o=.d)
 all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJS)
-	$(CC) $(FLAGS) -o $@ $(OBJS)
+	$(CC) $(FLAGS) -o $@ $(OBJS) -lm
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.c
 	$(CC) $(FLAGS) -c -MMD $< -o $@ -I $(INC_DIR) 

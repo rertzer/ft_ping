@@ -1,7 +1,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <stdio.h>
 #include <strings.h>
 
 #include "ft_ping.h"

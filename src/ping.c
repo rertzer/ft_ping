@@ -43,7 +43,8 @@ int ft_ping(int verbose, const char* const hostname) {
 			send_next = false;
 		}
 	}
-	printf("this is the end my friend\n");
+	compute_stats(&stats);
+	print_stats(hostname, &stats);
 	return (0);
 }
 

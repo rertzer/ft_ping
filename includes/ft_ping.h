@@ -42,9 +42,15 @@ typedef struct {
 } socket_t;
 
 typedef struct {
+	uint8_t		 ttl;
+	uint8_t*	 source;
+	struct icmp* icmp;
+} packet_t;
+
+typedef struct {
 	int	  transmitted;
 	int	  received;
-	int	  loss;
+	float loss;
 	float min;
 	float max;
 	float avg;
@@ -71,5 +77,7 @@ fd_set				init_fd_set(int fd);
 float				read_socket(socket_t sock, uint16_t pid);
 void				init_stats(stats_t* stats);
 void				update_stats(stats_t* stats, float time);
+void				compute_stats(stats_t* stats);
+void				print_stats(const char* const hostname, stats_t* stats);
 int write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp_info);
 #endif

@@ -17,7 +17,7 @@ socket_t init_socket() {
 	sock.fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	ssize_t buffsize = 64 * 1024;
 	setsockopt(sock.fd, SOL_SOCKET, SO_RCVBUF, &buffsize, sizeof(buffsize));
-	int ttl = 255;
+	int ttl = 1;  // 255;
 	setsockopt(sock.fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl));
 	return (sock);
 }
@@ -26,16 +26,35 @@ float read_socket(socket_t sock, uint16_t pid) {
 	char	buff[500];
 	ssize_t len = recv(sock.fd, buff, 500, 0);
 	float	time = NAN;
+
 	if (len > 0) {
-		uint8_t		 ttl = *((uint8_t*)buff + 8);
-		uint8_t*	 source_p = ((uint8_t*)buff + 12);
-		struct icmp* icmp = (struct icmp*)((uint8_t*)buff + 20);
-		int			 recv_id = ntohs(icmp->icmp_id);
-		if (recv_id == pid) {
-			time = get_time((struct icmp*)icmp);
-			printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", len - 20,
-				   inet_ntoa(*(struct in_addr*)source_p), ntohs(icmp->icmp_seq), ttl, time);
+		packet_t packet;
+		packet.ttl = *((uint8_t*)buff + 8);
+		packet.source = ((uint8_t*)buff + 12);
+		packet.icmp = (struct icmp*)((uint8_t*)buff + 20);
+
+		int recv_id = ntohs(packet.icmp->icmp_id);
+		printf("type %d, code %d, recv id %d, %d\n", packet.icmp->icmp_type, packet.icmp->icmp_code,
+			   recv_id, pid);
+		if (packet.icmp->icmp_type == 0) {
+			if (ntohs(packet.icmp->icmp_id) == pid) {
+				time = get_time(packet.icmp);
+				printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", len - 20,
+					   inet_ntoa(*(struct in_addr*)packet.source), ntohs(packet.icmp->icmp_seq),
+					   packet.ttl, time);
+			}
+		} else if (packet.icmp->icmp_type == 11) {
+			uint16_t* toto = (uint16_t*)buff;
+			for (int i = 0; i < len / 2; ++i) {
+				printf("%d ", ntohs(toto[i]));
+			}
+			printf("\n");
+			struct icmp* origin_icmp = (struct icmp*)((uint8_t*)buff + 28);
+			printf("%ld bytes from %s: Time to live exceeded %d, %d\n", len,
+				   inet_ntoa(*(struct in_addr*)packet.source), ntohs(origin_icmp->icmp_id),
+				   ntohs(packet.icmp->icmp_seq));
 		}
+
 	} else {
 		printf("read error %ld\n", len);
 	}
