@@ -32,7 +32,7 @@ void compute_stats(stats_t* stats) {
 }
 
 void print_stats(const char* const hostname, stats_t* stats) {
-	printf("--- %s ping statistics\n", hostname);
+	printf("--- %s ping statistics ---\n", hostname);
 	printf("%d packets transmitted, %d packets received, %.0f%% packet loss\n", stats->transmitted,
 		   stats->received, stats->loss);
 	if (stats->received != 0) {

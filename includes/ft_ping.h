@@ -42,6 +42,7 @@ typedef struct {
 } socket_t;
 
 typedef struct {
+	ssize_t		 len;
 	uint8_t		 ttl;
 	uint8_t*	 source;
 	struct icmp* icmp;

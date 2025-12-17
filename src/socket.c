@@ -10,7 +10,10 @@
 
 #include "ft_ping.h"
 
+static void	 update_packet(packet_t* packet, uint8_t* buff);
 static float get_time(struct icmp* icmp);
+static float handle_echo_reply(packet_t* packet, int pid);
+static void	 handle_other_icmp(packet_t* packet, uint8_t* buff, int pid);
 
 socket_t init_socket() {
 	socket_t sock;
@@ -23,40 +26,32 @@ socket_t init_socket() {
 }
 
 float read_socket(socket_t sock, uint16_t pid) {
-	char	buff[500];
-	ssize_t len = recv(sock.fd, buff, 500, 0);
-	float	time = NAN;
+	uint8_t	 buff[500];
+	packet_t packet;
+	packet.len = recv(sock.fd, buff, 500, 0);
+	float time = NAN;
 
-	if (len > 0) {
-		len -= 20;
-		packet_t packet;
-		packet.ttl = *((uint8_t*)buff + 8);
-		packet.source = ((uint8_t*)buff + 12);
-		packet.icmp = (struct icmp*)((uint8_t*)buff + 20);
+	if (packet.len > 0) {
+		packet.len -= 20;
+		update_packet(&packet, buff);
 
 		if (packet.icmp->icmp_type == 0) {
-			if (ntohs(packet.icmp->icmp_id) == pid) {
-				time = get_time(packet.icmp);
-				printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", len,
-					   inet_ntoa(*(struct in_addr*)packet.source), ntohs(packet.icmp->icmp_seq),
-					   packet.ttl, time);
-			}
+			time = handle_echo_reply(&packet, pid);
+
 		} else {
-			struct icmp* origin_icmp = (struct icmp*)((uint8_t*)buff + 48);
-			if (ntohs(origin_icmp->icmp_id) == pid) {
-				if (packet.icmp->icmp_type == 11) {
-					printf("%ld bytes from %s: Time to live exceeded\n", len,
-						   inet_ntoa(*(struct in_addr*)packet.source));
-				} else {
-					printf("Bad ICMP type: %d\n", packet.icmp->icmp_type);
-				}
-			}
+			handle_other_icmp(&packet, buff, pid);
 		}
 
 	} else {
-		printf("ping: read error %ld\n", len);
+		printf("ft_ping: read error %ld\n", packet.len);
 	}
 	return (time);
+}
+
+static void update_packet(packet_t* packet, uint8_t* buff) {
+	packet->ttl = *((uint8_t*)buff + 8);
+	packet->source = ((uint8_t*)buff + 12);
+	packet->icmp = (struct icmp*)((uint8_t*)buff + 20);
 }
 
 static float get_time(struct icmp* icmp) {
@@ -68,6 +63,29 @@ static float get_time(struct icmp* icmp) {
 	return (time);
 }
 
+static float handle_echo_reply(packet_t* packet, int pid) {
+	float time = NAN;
+	if (ntohs(packet->icmp->icmp_id) == pid) {
+		time = get_time(packet->icmp);
+		printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", packet->len,
+			   inet_ntoa(*(struct in_addr*)packet->source), ntohs(packet->icmp->icmp_seq),
+			   packet->ttl, time);
+	}
+	return (time);
+}
+
+static void handle_other_icmp(packet_t* packet, uint8_t* buff, int pid) {
+	struct icmp* origin_icmp = (struct icmp*)((uint8_t*)buff + 48);
+	if (ntohs(origin_icmp->icmp_id) == pid) {
+		if (packet->icmp->icmp_type == 11) {
+			printf("%ld bytes from %s: Time to live exceeded\n", packet->len,
+				   inet_ntoa(*(struct in_addr*)packet->source));
+		} else {
+			printf("Bad ICMP type: %d\n", packet->icmp->icmp_type);
+		}
+	}
+}
+
 int write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp_info) {
 	char buff[ICMP_PACKET_SIZE];
 
@@ -75,7 +93,7 @@ int write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp
 	int len = sendto(sock.fd, buff, ICMP_PACKET_SIZE, 0, (const struct sockaddr*)dest_addr,
 					 sizeof(struct sockaddr));
 	if (len < 0) {
-		printf("error: %d %s\n", errno, strerror(errno));
+		printf("ft_ping: error: %d %s\n", errno, strerror(errno));
 		return (0);
 	}
 	update_icmp_info(icmp_info);

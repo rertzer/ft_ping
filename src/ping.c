@@ -14,8 +14,6 @@ extern bool send_next;
 extern bool the_end;
 
 int ft_ping(int verbose, const char* const hostname) {
-	(void)verbose;
-
 	struct sockaddr_in* host_addr = init_host(hostname);
 	icmp_info_t			icmp_info = init_icmp_info();
 	socket_t			sock = init_socket();
@@ -24,7 +22,13 @@ int ft_ping(int verbose, const char* const hostname) {
 	stats_t				stats;
 	init_stats(&stats);
 	init_signals();
-	printf("PING %s (%s): 56 data bytes\n", hostname, inet_ntoa(host_addr->sin_addr));
+
+	printf("PING %s (%s): 56 data bytes", hostname, inet_ntoa(host_addr->sin_addr));
+	if (verbose != 0) {
+		printf(", id 0x%X = %d", icmp_info.pid, icmp_info.pid);
+	}
+	printf("\n");
+
 	while (the_end == false) {
 		fd_set* readfd = &active;
 		int		fd_nb = pselect(SELECT_MAX_FD, readfd, NULL, NULL, NULL, &sigmask);
