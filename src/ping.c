@@ -1,11 +1,9 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <limits.h>
-#include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
@@ -13,9 +11,11 @@
 extern bool send_next;
 extern bool the_end;
 
+static void print_ping(struct sockaddr_in* host_addr, icmp_info_t* icmp_info, bool verbose);
+
 int ft_ping(int verbose, const char* const hostname) {
 	struct sockaddr_in* host_addr = init_host(hostname);
-	icmp_info_t			icmp_info = init_icmp_info();
+	icmp_info_t			icmp_info = init_icmp_info(hostname);
 	socket_t			sock = init_socket();
 	fd_set				active = init_fd_set(sock.fd);
 	sigset_t			sigmask = init_sigmask();
@@ -23,18 +23,14 @@ int ft_ping(int verbose, const char* const hostname) {
 	init_stats(&stats);
 	init_signals();
 
-	printf("PING %s (%s): 56 data bytes", hostname, inet_ntoa(host_addr->sin_addr));
-	if (verbose != 0) {
-		printf(", id 0x%X = %d", icmp_info.pid, icmp_info.pid);
-	}
-	printf("\n");
+	print_ping(host_addr, &icmp_info, verbose);
 
 	while (the_end == false) {
 		fd_set* readfd = &active;
 		int		fd_nb = pselect(SELECT_MAX_FD, readfd, NULL, NULL, NULL, &sigmask);
 		if (fd_nb > 0) {
 			if (FD_ISSET(sock.fd, readfd)) {
-				float time = read_socket(sock, icmp_info.pid);
+				float time = read_socket(sock, &icmp_info);
 				if (time == time) {
 					update_stats(&stats, time);
 				}
@@ -52,6 +48,13 @@ int ft_ping(int verbose, const char* const hostname) {
 	return (0);
 }
 
+static void print_ping(struct sockaddr_in* host_addr, icmp_info_t* icmp_info, bool verbose) {
+	printf("PING %s (%s): 56 data bytes", icmp_info->hostname, inet_ntoa(host_addr->sin_addr));
+	if (verbose) {
+		printf(", id 0x%X = %d", icmp_info->pid, icmp_info->pid);
+	}
+	printf("\n");
+}
 fd_set init_fd_set(int fd) {
 	fd_set active;
 

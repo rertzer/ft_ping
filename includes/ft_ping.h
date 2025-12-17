@@ -31,8 +31,9 @@ typedef struct {
 } options_t;
 
 typedef struct {
-	uint16_t pid;
-	uint16_t seq_nb;
+	char const* hostname;
+	uint16_t	pid;
+	uint16_t	seq_nb;
 } icmp_info_t;
 
 typedef struct {
@@ -66,16 +67,17 @@ int					ft_ping(int verbose, const char* const hostname);
 struct sockaddr_in* init_host(const char* const hostname);
 void				error_exit(const char* const error_message);
 void				get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info);
-icmp_info_t			init_icmp_info();
+icmp_info_t			init_icmp_info(const char* hostname);
 void				update_icmp_info(icmp_info_t* icmp_info);
 void				init_signals();
 sigset_t			init_sigmask();
 void				send_icmp(icmp_info_t* icmp_info);
+uint16_t			check_checksum(struct icmp* icmp);
 void				set_send_next(int sig);
 void				set_the_end(int sig);
 socket_t			init_socket();
 fd_set				init_fd_set(int fd);
-float				read_socket(socket_t sock, uint16_t pid);
+float				read_socket(socket_t sock, icmp_info_t* icmp_info);
 void				init_stats(stats_t* stats);
 void				update_stats(stats_t* stats, float time);
 void				compute_stats(stats_t* stats);
