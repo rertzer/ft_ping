@@ -31,7 +31,7 @@ int ft_ping(int verbose, const char* const hostname) {
 		if (fd_nb > 0) {
 			if (FD_ISSET(sock.fd, readfd)) {
 				float time = read_socket(sock, icmp_info.pid);
-				if (time != NAN) {
+				if (time == time) {
 					update_stats(&stats, time);
 				}
 			}

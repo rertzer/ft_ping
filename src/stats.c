@@ -11,7 +11,8 @@ void update_stats(stats_t* stats, float time) {
 	stats->received++;
 	if (time < stats->min) {
 		stats->min = time;
-	} else if (time > stats->max) {
+	}
+	if (time > stats->max) {
 		stats->max = time;
 	}
 	stats->avg += time;
@@ -19,15 +20,23 @@ void update_stats(stats_t* stats, float time) {
 }
 
 void compute_stats(stats_t* stats) {
-	stats->loss = (float)(stats->transmitted - stats->received) / (float)stats->transmitted * 100.F;
-	stats->avg /= (float)stats->received;
-	stats->stddev = sqrt((double)((stats->stddev / (float)stats->received) - pow(stats->avg, 2.)));
+	if (stats->transmitted > 0) {
+		stats->loss =
+			(float)(stats->transmitted - stats->received) / (float)stats->transmitted * 100.F;
+	}
+	if (stats->received != 0) {
+		stats->avg /= (float)stats->received;
+		stats->stddev =
+			sqrt((double)((stats->stddev / (float)stats->received) - pow(stats->avg, 2.)));
+	}
 }
 
 void print_stats(const char* const hostname, stats_t* stats) {
 	printf("--- %s ping statistics\n", hostname);
 	printf("%d packets transmitted, %d packets received, %.0f%% packet loss\n", stats->transmitted,
 		   stats->received, stats->loss);
-	printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", stats->min, stats->avg,
-		   stats->max, stats->stddev);
+	if (stats->received != 0) {
+		printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", stats->min, stats->avg,
+			   stats->max, stats->stddev);
+	}
 }

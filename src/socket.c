@@ -17,7 +17,7 @@ socket_t init_socket() {
 	sock.fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	ssize_t buffsize = 64 * 1024;
 	setsockopt(sock.fd, SOL_SOCKET, SO_RCVBUF, &buffsize, sizeof(buffsize));
-	int ttl = 1;  // 255;
+	int ttl = 255;
 	setsockopt(sock.fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl));
 	return (sock);
 }
@@ -28,35 +28,33 @@ float read_socket(socket_t sock, uint16_t pid) {
 	float	time = NAN;
 
 	if (len > 0) {
+		len -= 20;
 		packet_t packet;
 		packet.ttl = *((uint8_t*)buff + 8);
 		packet.source = ((uint8_t*)buff + 12);
 		packet.icmp = (struct icmp*)((uint8_t*)buff + 20);
 
-		int recv_id = ntohs(packet.icmp->icmp_id);
-		printf("type %d, code %d, recv id %d, %d\n", packet.icmp->icmp_type, packet.icmp->icmp_code,
-			   recv_id, pid);
 		if (packet.icmp->icmp_type == 0) {
 			if (ntohs(packet.icmp->icmp_id) == pid) {
 				time = get_time(packet.icmp);
-				printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", len - 20,
+				printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", len,
 					   inet_ntoa(*(struct in_addr*)packet.source), ntohs(packet.icmp->icmp_seq),
 					   packet.ttl, time);
 			}
-		} else if (packet.icmp->icmp_type == 11) {
-			uint16_t* toto = (uint16_t*)buff;
-			for (int i = 0; i < len / 2; ++i) {
-				printf("%d ", ntohs(toto[i]));
+		} else {
+			struct icmp* origin_icmp = (struct icmp*)((uint8_t*)buff + 48);
+			if (ntohs(origin_icmp->icmp_id) == pid) {
+				if (packet.icmp->icmp_type == 11) {
+					printf("%ld bytes from %s: Time to live exceeded\n", len,
+						   inet_ntoa(*(struct in_addr*)packet.source));
+				} else {
+					printf("Bad ICMP type: %d\n", packet.icmp->icmp_type);
+				}
 			}
-			printf("\n");
-			struct icmp* origin_icmp = (struct icmp*)((uint8_t*)buff + 28);
-			printf("%ld bytes from %s: Time to live exceeded %d, %d\n", len,
-				   inet_ntoa(*(struct in_addr*)packet.source), ntohs(origin_icmp->icmp_id),
-				   ntohs(packet.icmp->icmp_seq));
 		}
 
 	} else {
-		printf("read error %ld\n", len);
+		printf("ping: read error %ld\n", len);
 	}
 	return (time);
 }
