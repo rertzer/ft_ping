@@ -30,6 +30,8 @@ all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJS)
 	$(CC) $(FLAGS) -o $@ $(OBJS) -lm
+	@echo 'setting raw socket capability'
+	@setcap cap_net_raw=pe $@ || echo "You need to be root!"
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.c
 	$(CC) $(FLAGS) -c -MMD $< -o $@ -I $(INC_DIR) 

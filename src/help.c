@@ -12,10 +12,6 @@ void print_help() {
 		"for any corresponding short options.\n\n"
 		"Options marked with (root only) are available only to superuser.\n\n"
 		"Report bugs to <rertzer@student.42.fr>.";
-	printf("%s", help_string);
-}
 
-void error_exit(const char* const error_message) {
-	fprintf(stderr, "FT_PING ERROR: %s\n", error_message);
-	exit(1);
+	printf("%s", help_string);
 }

@@ -15,3 +15,8 @@ void parsing_exit(char* path, options_t* opt) {
 	fprintf(stderr, "Try ft_ping -?' for more information.\n");
 	exit(PARSING_ERROR);
 }
+
+void error_exit(const char* const error_message) {
+	fprintf(stderr, "ft_ping ERROR: %s\n", error_message);
+	exit(1);
+}

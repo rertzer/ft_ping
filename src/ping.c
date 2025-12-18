@@ -4,6 +4,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
@@ -35,12 +36,18 @@ int ft_ping(int verbose, const char* const hostname) {
 					update_stats(&stats, time);
 				}
 			}
-		} else if (send_next == true) {
-			int sent = write_socket(sock, host_addr, &icmp_info);
-			if (sent) {
-				stats.transmitted += sent;
+		} else {
+			if (errno == EINTR) {
+				if (send_next == true) {
+					int sent = write_socket(sock, host_addr, &icmp_info);
+					if (sent) {
+						stats.transmitted += sent;
+					}
+					send_next = false;
+				}
+			} else {
+				error_exit(strerror(errno));
 			}
-			send_next = false;
 		}
 	}
 	compute_stats(&stats);
