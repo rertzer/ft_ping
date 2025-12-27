@@ -20,6 +20,7 @@ options_t parse_args(int argc, char** argv, char** host_param) {
 
 static int parse_one_arg(char* arg, options_t* opt, char** host_param) {
 	int error = 0;
+
 	if (arg[0] == '-') {
 		error = parse_option(arg, opt);
 	} else if (*host_param == NULL) {
@@ -30,6 +31,7 @@ static int parse_one_arg(char* arg, options_t* opt, char** host_param) {
 
 static int parse_option(char* arg, options_t* opt) {
 	int error = 0;
+
 	for (int i = 1; arg[i] != 0; ++i) {
 		switch (arg[i]) {
 			case 'v':

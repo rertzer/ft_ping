@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
+#include <error.h>
 #include <limits.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -20,8 +21,8 @@ int ft_ping(int verbose, const char* const hostname) {
 	socket_t			sock = init_socket();
 	fd_set				active = init_fd_set(sock.fd);
 	sigset_t			sigmask = init_sigmask();
-	stats_t				stats;
-	init_stats(&stats);
+	stats_t				stats = init_stats();
+
 	init_signals();
 
 	print_ping(host_addr, &icmp_info, verbose);
@@ -31,7 +32,7 @@ int ft_ping(int verbose, const char* const hostname) {
 		int		fd_nb = pselect(SELECT_MAX_FD, readfd, NULL, NULL, NULL, &sigmask);
 		if (fd_nb > 0) {
 			if (FD_ISSET(sock.fd, readfd)) {
-				float time = read_socket(sock, &icmp_info);
+				double time = read_socket(sock, &icmp_info);
 				if (time == time) {
 					update_stats(&stats, time);
 				}
@@ -46,10 +47,13 @@ int ft_ping(int verbose, const char* const hostname) {
 					send_next = false;
 				}
 			} else {
-				error_exit(strerror(errno));
+				close(sock.fd);
+				error(EXIT_FAILURE, errno, "select failed");
 			}
 		}
 	}
+	close(sock.fd);
+	fflush(stdout);
 	compute_stats(&stats);
 	print_stats(hostname, &stats);
 	return (0);

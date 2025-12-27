@@ -1,6 +1,8 @@
 #include <arpa/inet.h>
+#include <error.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <stdlib.h>
 #include <strings.h>
 
 #include "ft_ping.h"
@@ -20,7 +22,7 @@ static struct addrinfo* get_host_info(const char* const hostname) {
 
 	int errcode = getaddrinfo(hostname, NULL, &hints, &host);
 	if (errcode != 0) {
-		error_exit(gai_strerror(errcode));
+		error(EXIT_FAILURE, 0, gai_strerror(errcode));
 	}
 	return (host);
 }

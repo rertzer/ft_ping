@@ -50,13 +50,13 @@ typedef struct {
 } packet_t;
 
 typedef struct {
-	int	  transmitted;
-	int	  received;
-	float loss;
-	float min;
-	float max;
-	float avg;
-	float stddev;
+	int	   transmitted;
+	int	   received;
+	double loss;
+	double min;
+	double max;
+	double avg;
+	double stddev;
 } stats_t;
 
 options_t			parse_args(int argc, char** argv, char** host_param);
@@ -65,7 +65,6 @@ bool				valid_parsing(options_t* opt);
 void				print_help();
 int					ft_ping(int verbose, const char* const hostname);
 struct sockaddr_in* init_host(const char* const hostname);
-void				error_exit(const char* const error_message);
 void				get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info);
 icmp_info_t			init_icmp_info(const char* hostname);
 void				update_icmp_info(icmp_info_t* icmp_info);
@@ -77,9 +76,9 @@ void				set_send_next(int sig);
 void				set_the_end(int sig);
 socket_t			init_socket();
 fd_set				init_fd_set(int fd);
-float				read_socket(socket_t sock, icmp_info_t* icmp_info);
-void				init_stats(stats_t* stats);
-void				update_stats(stats_t* stats, float time);
+double				read_socket(socket_t sock, icmp_info_t* icmp_info);
+stats_t				init_stats();
+void				update_stats(stats_t* stats, double time);
 void				compute_stats(stats_t* stats);
 void				print_stats(const char* const hostname, stats_t* stats);
 int write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp_info);

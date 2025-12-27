@@ -3,11 +3,11 @@
 
 #include "ft_ping.h"
 
-void init_stats(stats_t* stats) {
-	*stats = (stats_t){0, 0, 0, 3.0e+38F, 0.F, 0.F, 0.F};
+stats_t init_stats() {
+	return ((stats_t){0, 0, 0, 3.0e+38, 0., 0., 0.});
 }
 
-void update_stats(stats_t* stats, float time) {
+void update_stats(stats_t* stats, double time) {
 	stats->received++;
 	if (time < stats->min) {
 		stats->min = time;
@@ -22,12 +22,12 @@ void update_stats(stats_t* stats, float time) {
 void compute_stats(stats_t* stats) {
 	if (stats->transmitted > 0) {
 		stats->loss =
-			(float)(stats->transmitted - stats->received) / (float)stats->transmitted * 100.F;
+			(double)(stats->transmitted - stats->received) / (double)stats->transmitted * 100.;
 	}
 	if (stats->received != 0) {
-		stats->avg /= (float)stats->received;
+		stats->avg /= (double)stats->received;
 		stats->stddev =
-			sqrt((double)((stats->stddev / (float)stats->received) - pow(stats->avg, 2.)));
+			sqrt((double)((stats->stddev / (double)stats->received) - pow(stats->avg, 2.)));
 	}
 }
 
