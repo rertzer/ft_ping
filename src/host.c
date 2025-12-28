@@ -20,9 +20,8 @@ static struct addrinfo* get_host_info(const char* const hostname) {
 	bzero(&hints, sizeof(hints));
 	hints.ai_flags = AI_CANONNAME;
 
-	int errcode = getaddrinfo(hostname, NULL, &hints, &host);
-	if (errcode != 0) {
-		error(EXIT_FAILURE, 0, gai_strerror(errcode));
+	if (getaddrinfo(hostname, NULL, &hints, &host) != 0) {
+		error(EXIT_FAILURE, 0, "unknown host");
 	}
 	return (host);
 }
