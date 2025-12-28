@@ -5,7 +5,7 @@ int main(int argc, char** argv) {
 	options_t opt;
 	char*	  host_arg = NULL;
 	opt = parse_args(argc, argv, &host_arg);
-	if (opt.valid == FALSE || (opt.valid == MISSING && opt.help == FALSE)) {
+	if (!valid_parsing(&opt)) {
 		parsing_exit(argv[0], &opt);
 	}
 	if (opt.help == TRUE) {

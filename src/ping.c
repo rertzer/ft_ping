@@ -1,27 +1,27 @@
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <stdio.h>
-#include <strings.h>
-
+#include <unistd.h>
 #include "ft_ping.h"
 
 int ft_ping(int verbose, const char* const hostname) {
 	(void)verbose;
-	struct addrinfo*	host = get_host_info(hostname);
-	struct sockaddr_in* host_addr = (struct sockaddr_in*)host->ai_addr;
-	printf("Host name: %s, port: %u, address: %s\n", host->ai_canonname, host_addr->sin_port,
-		   inet_ntoa(host_addr->sin_addr));
-	return (0);
-}
-
-struct addrinfo* get_host_info(const char* const hostname) {
-	struct addrinfo hints, *host;
-	bzero(&hints, sizeof(hints));
-	hints.ai_flags = AI_CANONNAME;
-
-	int errcode = getaddrinfo(hostname, NULL, &hints, &host);
-	if (errcode != 0) {
-		error_exit(gai_strerror(errcode));
+	init_host(hostname);
+	init_icmp_info();
+	init_signals();
+	init_socket();
+	socket_t sock;
+	sock.fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	ssize_t buffsize = 60 * 1024;
+	setsockopt(sock.fd, SOL_SOCKET, SO_RCVBUF, &buffsize, sizeof(buffsize));
+	if (bind(sock.fd, (const struct sockaddr*)&sock.addr, sizeof(sock.addr)) != 0) {
+		printf("socket bind error\n");
+		return (1);
 	}
-	return (host);
+
+	alarm(1);
+	while (true) {
+		printf("looping\n");
+		pause();
+		printf("woke up\n");
+	}
+	return (0);
 }

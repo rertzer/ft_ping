@@ -51,3 +51,7 @@ static int parse_option(char* arg, options_t* opt) {
 static inline void parse_host(char* arg, char** host_param) {
 	*host_param = arg;
 }
+
+bool valid_parsing(options_t* opt) {
+	return (!(opt->valid == FALSE || (opt->valid == MISSING && opt->help == FALSE)));
+}
