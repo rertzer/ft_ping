@@ -24,7 +24,7 @@
 #define SELECT_MAX_FD 4
 #define SOCKET_BUFFER_SIZE 65536
 #define SOCKET_RECEIVE_BUFFER_SIZE 600
-#define TTL_DEFAULT 255
+#define FT_TTL_DEFAULT 255
 
 typedef struct {
 	uint8_t verbose;
@@ -74,7 +74,7 @@ void				update_icmp_info(icmp_info_t* icmp_info);
 void				init_signals();
 sigset_t			init_sigmask();
 void				send_icmp(icmp_info_t* icmp_info);
-uint16_t			check_checksum(struct icmp* icmp);
+uint16_t			check_checksum(packet_t* packet);
 void				set_send_next(int sig);
 void				set_the_end(int sig);
 socket_t			init_socket();

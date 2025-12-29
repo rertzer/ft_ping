@@ -6,7 +6,7 @@
 
 #include "ft_ping.h"
 
-static uint16_t get_icmp_checksum(uint16_t* icmp);
+static uint16_t get_icmp_checksum(uint16_t* icmp, size_t len);
 
 void get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info) {
 	icmp->icmp_type = ICMP_ECHO;
@@ -16,13 +16,17 @@ void get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info) {
 	memset(icmp->icmp_data, 0xa5, ICMP_PAYLOAD_SIZE);
 	gettimeofday((struct timeval*)icmp->icmp_data, NULL);
 	icmp->icmp_cksum = 0;
-	icmp->icmp_cksum = get_icmp_checksum((uint16_t*)icmp);
+	icmp->icmp_cksum = get_icmp_checksum((uint16_t*)icmp, ICMP_PACKET_SIZE);
 }
 
-static uint16_t get_icmp_checksum(uint16_t* icmp) {
+static uint16_t get_icmp_checksum(uint16_t* icmp, size_t len) {
 	int32_t sum = 0;
-	for (size_t i = 0; i < ICMP_PACKET_SIZE / 2; ++i) {
+	for (size_t i = 0; i < len / 2; ++i) {
 		sum += icmp[i];
+	}
+	if (len % 2 != 0) {
+		uint8_t* odd = (uint8_t*)icmp;
+		sum += odd[len - 1];
 	}
 	sum = (sum >> 16) + (sum & 0xFFFF);
 	sum += (sum >> 16);
@@ -30,10 +34,10 @@ static uint16_t get_icmp_checksum(uint16_t* icmp) {
 	return ((uint16_t)sum);
 }
 
-uint16_t check_checksum(struct icmp* icmp) {
-	uint16_t received_checksum = icmp->icmp_cksum;
-	icmp->icmp_cksum = 0;
-	uint16_t computed_checksum = get_icmp_checksum((uint16_t*)icmp);
+uint16_t check_checksum(packet_t* packet) {
+	uint16_t received_checksum = packet->icmp->icmp_cksum;
+	packet->icmp->icmp_cksum = 0;
+	uint16_t computed_checksum = get_icmp_checksum((uint16_t*)packet->icmp, packet->len);
 	return (received_checksum & ~computed_checksum);
 }
 

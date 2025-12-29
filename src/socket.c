@@ -27,7 +27,7 @@ socket_t init_socket() {
 		close(sock.fd);
 		error(0, errno, "setsockopt");
 	}
-	int ttl = TTL_DEFAULT;
+	int ttl = FT_TTL_DEFAULT;
 	if (setsockopt(sock.fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) {
 		close(sock.fd);
 		error(0, errno, "setsockpt");
@@ -73,7 +73,7 @@ static double get_time(struct icmp* icmp) {
 static double handle_echo_reply(packet_t* packet, icmp_info_t* icmp_info) {
 	double time = NAN;
 	if (ntohs(packet->icmp->icmp_id) == icmp_info->pid) {
-		if (check_checksum(packet->icmp) == 0) {
+		if (check_checksum(packet) == 0) {
 			time = get_time(packet->icmp);
 			printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", packet->len,
 				   inet_ntoa(*(struct in_addr*)packet->source), ntohs(packet->icmp->icmp_seq),
@@ -89,7 +89,7 @@ static void handle_other_icmp(packet_t* packet, uint8_t* buff, int pid) {
 	struct icmp* origin_icmp = (struct icmp*)((uint8_t*)buff + 48);
 	if (ntohs(origin_icmp->icmp_id) == pid) {
 		if (packet->icmp->icmp_type == 11) {
-			if (check_checksum(packet->icmp) == 0) {
+			if (check_checksum(packet) == 0) {
 				printf("%ld bytes from %s: Time to live exceeded\n", packet->len,
 					   inet_ntoa(*(struct in_addr*)packet->source));
 			} else {
