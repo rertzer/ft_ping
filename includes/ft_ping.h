@@ -22,6 +22,9 @@
 #define ICMP_PACKET_SIZE (ICMP_PAYLOAD_SIZE + ICMP_HEADER_SIZE)
 
 #define SELECT_MAX_FD 4
+#define SOCKET_BUFFER_SIZE 65536
+#define SOCKET_RECEIVE_BUFFER_SIZE 600
+#define TTL_DEFAULT 255
 
 typedef struct {
 	uint8_t verbose;

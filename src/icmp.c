@@ -36,6 +36,7 @@ uint16_t check_checksum(struct icmp* icmp) {
 	uint16_t computed_checksum = get_icmp_checksum((uint16_t*)icmp);
 	return (received_checksum & ~computed_checksum);
 }
+
 icmp_info_t init_icmp_info(const char* hostname) {
 	icmp_info_t icmp_info;
 	icmp_info.hostname = hostname;

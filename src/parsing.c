@@ -1,5 +1,6 @@
 #include "ft_ping.h"
 
+static inline bool short_option(char* arg);
 static int		   parse_one_arg(char* arg, options_t* opt, char** host_param);
 static int		   parse_option(char* arg, options_t* opt);
 static inline void parse_host(char* arg, char** host_param);
@@ -15,17 +16,19 @@ options_t parse_args(int argc, char** argv, char** host_param) {
 	if (*host_param == NULL) {
 		opt.valid = MISSING;
 	}
+
 	return (opt);
 }
 
 static int parse_one_arg(char* arg, options_t* opt, char** host_param) {
 	int error = 0;
 
-	if (arg[0] == '-') {
+	if (short_option(arg)) {
 		error = parse_option(arg, opt);
 	} else if (*host_param == NULL) {
 		parse_host(arg, host_param);
 	}
+
 	return (error);
 }
 
@@ -48,6 +51,9 @@ static int parse_option(char* arg, options_t* opt) {
 		}
 	}
 	return (error);
+}
+static inline bool short_option(char* arg) {
+	return (arg[0] == '-');
 }
 
 static inline void parse_host(char* arg, char** host_param) {

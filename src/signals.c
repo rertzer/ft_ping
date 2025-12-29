@@ -3,9 +3,8 @@
 
 #include "ft_ping.h"
 
-bool					   send_next;
-bool					   the_end;
-extern struct sockaddr_in* host_addr;
+bool send_next;
+bool the_end;
 
 void init_signals() {
 	send_next = false;

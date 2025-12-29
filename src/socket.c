@@ -6,7 +6,6 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -23,12 +22,12 @@ socket_t init_socket() {
 		error(EXIT_FAILURE, errno, "socket failed");
 	}
 
-	ssize_t buffsize = 65536;
+	ssize_t buffsize = SOCKET_BUFFER_SIZE;
 	if (setsockopt(sock.fd, SOL_SOCKET, SO_RCVBUF, &buffsize, sizeof(buffsize)) == -1) {
 		close(sock.fd);
 		error(0, errno, "setsockopt");
 	}
-	int ttl = 255;
+	int ttl = TTL_DEFAULT;
 	if (setsockopt(sock.fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) {
 		close(sock.fd);
 		error(0, errno, "setsockpt");
@@ -37,9 +36,9 @@ socket_t init_socket() {
 }
 
 double read_socket(socket_t sock, icmp_info_t* icmp_info) {
-	uint8_t	 buff[500];
+	uint8_t	 buff[SOCKET_RECEIVE_BUFFER_SIZE];
 	packet_t packet;
-	packet.len = recv(sock.fd, buff, 500, 0);
+	packet.len = recv(sock.fd, buff, SOCKET_RECEIVE_BUFFER_SIZE, 0);
 	double time = NAN;
 
 	if (packet.len > 0) {
@@ -80,7 +79,7 @@ static double handle_echo_reply(packet_t* packet, icmp_info_t* icmp_info) {
 				   inet_ntoa(*(struct in_addr*)packet->source), ntohs(packet->icmp->icmp_seq),
 				   packet->ttl, time);
 		} else {
-			printf("checksum mismatch from %s\n", icmp_info->hostname);
+			fprintf(stderr, "checksum mismatch from %s\n", icmp_info->hostname);
 		}
 	}
 	return (time);
@@ -94,10 +93,11 @@ static void handle_other_icmp(packet_t* packet, uint8_t* buff, int pid) {
 				printf("%ld bytes from %s: Time to live exceeded\n", packet->len,
 					   inet_ntoa(*(struct in_addr*)packet->source));
 			} else {
-				printf("checksum mismatch from %s\n", inet_ntoa(*(struct in_addr*)packet->source));
+				fprintf(stderr, "checksum mismatch from %s\n",
+						inet_ntoa(*(struct in_addr*)packet->source));
 			}
 		} else {
-			printf("Bad ICMP type: %d\n", packet->icmp->icmp_type);
+			fprintf(stderr, "Bad ICMP type: %d\n", packet->icmp->icmp_type);
 		}
 	}
 }

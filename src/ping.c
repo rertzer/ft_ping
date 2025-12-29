@@ -30,6 +30,7 @@ int ft_ping(int verbose, const char* const hostname) {
 	while (the_end == false) {
 		fd_set* readfd = &active;
 		int		fd_nb = pselect(SELECT_MAX_FD, readfd, NULL, NULL, NULL, &sigmask);
+
 		if (fd_nb > 0) {
 			if (FD_ISSET(sock.fd, readfd)) {
 				double time = read_socket(sock, &icmp_info);
@@ -52,10 +53,12 @@ int ft_ping(int verbose, const char* const hostname) {
 			}
 		}
 	}
+
 	close(sock.fd);
 	fflush(stdout);
 	compute_stats(&stats);
 	print_stats(hostname, &stats);
+
 	return (0);
 }
 
@@ -66,6 +69,7 @@ static void print_ping(struct sockaddr_in* host_addr, icmp_info_t* icmp_info, bo
 	}
 	printf("\n");
 }
+
 fd_set init_fd_set(int fd) {
 	fd_set active;
 
