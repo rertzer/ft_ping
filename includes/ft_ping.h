@@ -17,6 +17,8 @@
 #define PARSING_ERROR 64
 #define INVALID_HOST_ERROR 1
 
+#define IP_HEADER_SIZE 20
+#define ICMP_TIME_EXCEED_HEADER_SIZE 8
 #define ICMP_HEADER_SIZE 8
 #define ICMP_PAYLOAD_SIZE 56
 #define ICMP_PACKET_SIZE (ICMP_PAYLOAD_SIZE + ICMP_HEADER_SIZE)
@@ -24,7 +26,7 @@
 #define SELECT_MAX_FD 4
 #define SOCKET_BUFFER_SIZE 65536
 #define SOCKET_RECEIVE_BUFFER_SIZE 600
-#define FT_TTL_DEFAULT 255
+#define FT_TTL_DEFAULT 64
 
 typedef struct {
 	uint8_t verbose;
@@ -37,6 +39,7 @@ typedef struct {
 	char const* hostname;
 	uint16_t	pid;
 	uint16_t	seq_nb;
+	uint8_t		verbose;
 } icmp_info_t;
 
 typedef struct {
@@ -46,9 +49,10 @@ typedef struct {
 } socket_t;
 
 typedef struct {
+	uint8_t*	 raw;
 	ssize_t		 len;
 	uint8_t		 ttl;
-	uint8_t*	 source;
+	uint32_t	 source;
 	struct icmp* icmp;
 } packet_t;
 
@@ -62,6 +66,22 @@ typedef struct {
 	double stddev;
 } stats_t;
 
+typedef struct {
+	uint8_t	 hdrlen : 4;
+	uint8_t	 version : 4;
+	uint8_t	 ecn : 2;
+	uint8_t	 dscp : 6;
+	uint16_t length;
+	uint16_t ident;
+	uint16_t flags_off;
+	uint8_t	 ttl;
+	uint8_t	 protocol;
+	uint16_t checksum;
+	uint32_t srcip;
+	uint32_t dstip;
+	uint32_t options[];	 // Present if hdrlen > 5
+} __attribute__((__packed__)) ip_header_t;
+
 options_t			parse_args(int argc, char** argv, char** host_param);
 void				parsing_exit(char* path, options_t* opt);
 bool				valid_parsing(options_t* opt);
@@ -69,7 +89,7 @@ void				print_help();
 int					ft_ping(int verbose, const char* const hostname);
 struct sockaddr_in* init_host(const char* const hostname);
 void				get_icmp_packet(struct icmp* icmp, icmp_info_t* icmp_info);
-icmp_info_t			init_icmp_info(const char* hostname);
+icmp_info_t			init_icmp_info(const char* hostname, uint8_t verbose);
 void				update_icmp_info(icmp_info_t* icmp_info);
 void				init_signals();
 sigset_t			init_sigmask();

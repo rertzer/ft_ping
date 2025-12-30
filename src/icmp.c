@@ -41,11 +41,12 @@ uint16_t check_checksum(packet_t* packet) {
 	return (received_checksum & ~computed_checksum);
 }
 
-icmp_info_t init_icmp_info(const char* hostname) {
+icmp_info_t init_icmp_info(const char* hostname, uint8_t verbose) {
 	icmp_info_t icmp_info;
 	icmp_info.hostname = hostname;
 	icmp_info.pid = getpid();
 	icmp_info.seq_nb = 0;
+	icmp_info.verbose = verbose;
 	return (icmp_info);
 }
 

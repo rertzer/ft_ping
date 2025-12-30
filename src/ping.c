@@ -12,11 +12,11 @@
 extern bool send_next;
 extern bool the_end;
 
-static void print_ping(struct sockaddr_in* host_addr, icmp_info_t* icmp_info, bool verbose);
+static void print_ping(struct sockaddr_in* host_addr, icmp_info_t* icmp_info);
 
 int ft_ping(int verbose, const char* const hostname) {
 	struct sockaddr_in* host_addr = init_host(hostname);
-	icmp_info_t			icmp_info = init_icmp_info(hostname);
+	icmp_info_t			icmp_info = init_icmp_info(hostname, verbose);
 	socket_t			sock = init_socket();
 	fd_set				active = init_fd_set(sock.fd);
 	sigset_t			sigmask = init_sigmask();
@@ -24,7 +24,7 @@ int ft_ping(int verbose, const char* const hostname) {
 
 	init_signals();
 
-	print_ping(host_addr, &icmp_info, verbose);
+	print_ping(host_addr, &icmp_info);
 
 	while (the_end == false) {
 		fd_set* readfd = &active;
@@ -61,10 +61,10 @@ int ft_ping(int verbose, const char* const hostname) {
 	return (0);
 }
 
-static void print_ping(struct sockaddr_in* host_addr, icmp_info_t* icmp_info, bool verbose) {
+static void print_ping(struct sockaddr_in* host_addr, icmp_info_t* icmp_info) {
 	printf("PING %s (%s): 56 data bytes", icmp_info->hostname, inet_ntoa(host_addr->sin_addr));
-	if (verbose) {
-		printf(", id 0x%X = %d", icmp_info->pid, icmp_info->pid);
+	if (icmp_info->verbose) {
+		printf(", id 0x%x = %d", icmp_info->pid, icmp_info->pid);
 	}
 	printf("\n");
 }

@@ -5,16 +5,24 @@
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
 
-static void	  update_packet(packet_t* packet, uint8_t* buff);
-static double get_time(struct icmp* icmp);
-static double handle_echo_reply(packet_t* packet, icmp_info_t* icmp_info);
-static void	  handle_other_icmp(packet_t* packet, uint8_t* buff, int pid);
+static void		update_packet(packet_t* packet, uint8_t* buff);
+static double	get_time(struct icmp* icmp);
+static double	handle_echo_reply(packet_t* packet, icmp_info_t* icmp_info);
+static void		handle_other_icmp(packet_t* packet, icmp_info_t* icmp_info);
+static void		handle_ttl_exceed_icmp(packet_t* packet, icmp_info_t* icmp_info);
+static void		print_verbose(uint8_t* payload);
+static void		print_raw_ip(uint16_t* payload);
+static void		print_ip_header(ip_header_t* header);
+static void		print_icmp(struct icmp* icmp, uint16_t size);
+static uint8_t	get_flags(uint16_t flags_off);
+static uint16_t get_off(uint16_t flags_off);
 
 socket_t init_socket() {
 	socket_t sock;
@@ -37,28 +45,29 @@ socket_t init_socket() {
 
 double read_socket(socket_t sock, icmp_info_t* icmp_info) {
 	uint8_t	 buff[SOCKET_RECEIVE_BUFFER_SIZE];
+	double	 time = NAN;
 	packet_t packet;
 	packet.len = recv(sock.fd, buff, SOCKET_RECEIVE_BUFFER_SIZE, 0);
-	double time = NAN;
 
 	if (packet.len > 0) {
-		packet.len -= 20;
+		packet.len -= IP_HEADER_SIZE;
 		update_packet(&packet, buff);
 
 		if (packet.icmp->icmp_type == 0) {
 			time = handle_echo_reply(&packet, icmp_info);
 
 		} else {
-			handle_other_icmp(&packet, buff, icmp_info->pid);
+			handle_other_icmp(&packet, icmp_info);
 		}
 	}
 	return (time);
 }
 
 static void update_packet(packet_t* packet, uint8_t* buff) {
-	packet->ttl = *((uint8_t*)buff + 8);
-	packet->source = ((uint8_t*)buff + 12);
-	packet->icmp = (struct icmp*)((uint8_t*)buff + 20);
+	packet->raw = ((uint8_t*)buff + IP_HEADER_SIZE + ICMP_TIME_EXCEED_HEADER_SIZE);
+	packet->ttl = ((ip_header_t*)buff)->ttl;
+	packet->source = ((ip_header_t*)buff)->srcip;
+	packet->icmp = (struct icmp*)((uint8_t*)buff + IP_HEADER_SIZE);
 }
 
 static double get_time(struct icmp* icmp) {
@@ -76,7 +85,7 @@ static double handle_echo_reply(packet_t* packet, icmp_info_t* icmp_info) {
 		if (check_checksum(packet) == 0) {
 			time = get_time(packet->icmp);
 			printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n", packet->len,
-				   inet_ntoa(*(struct in_addr*)packet->source), ntohs(packet->icmp->icmp_seq),
+				   inet_ntoa(*(struct in_addr*)&packet->source), ntohs(packet->icmp->icmp_seq),
 				   packet->ttl, time);
 		} else {
 			fprintf(stderr, "checksum mismatch from %s\n", icmp_info->hostname);
@@ -85,20 +94,28 @@ static double handle_echo_reply(packet_t* packet, icmp_info_t* icmp_info) {
 	return (time);
 }
 
-static void handle_other_icmp(packet_t* packet, uint8_t* buff, int pid) {
-	struct icmp* origin_icmp = (struct icmp*)((uint8_t*)buff + 48);
-	if (ntohs(origin_icmp->icmp_id) == pid) {
-		if (packet->icmp->icmp_type == 11) {
-			if (check_checksum(packet) == 0) {
-				printf("%ld bytes from %s: Time to live exceeded\n", packet->len,
-					   inet_ntoa(*(struct in_addr*)packet->source));
-			} else {
-				fprintf(stderr, "checksum mismatch from %s\n",
-						inet_ntoa(*(struct in_addr*)packet->source));
-			}
+static void handle_other_icmp(packet_t* packet, icmp_info_t* icmp_info) {
+	struct icmp* origin_icmp = (struct icmp*)((uint8_t*)(packet->raw) + IP_HEADER_SIZE);
+
+	if (ntohs(origin_icmp->icmp_id) == icmp_info->pid) {
+		if (packet->icmp->icmp_type == ICMP_TIME_EXCEEDED) {
+			handle_ttl_exceed_icmp(packet, icmp_info);
 		} else {
 			fprintf(stderr, "Bad ICMP type: %d\n", packet->icmp->icmp_type);
 		}
+	}
+}
+
+static void handle_ttl_exceed_icmp(packet_t* packet, icmp_info_t* icmp_info) {
+	if (check_checksum(packet) == 0) {
+		printf("%ld bytes from %s: Time to live exceeded\n", packet->len,
+			   inet_ntoa(*(struct in_addr*)&packet->source));
+		if (icmp_info->verbose) {
+			print_verbose(packet->raw);
+		}
+	} else {
+		fprintf(stderr, "checksum mismatch from %s\n",
+				inet_ntoa(*(struct in_addr*)&packet->source));
 	}
 }
 
@@ -112,4 +129,44 @@ int write_socket(socket_t sock, struct sockaddr_in* dest_addr, icmp_info_t* icmp
 	}
 	update_icmp_info(icmp_info);
 	return (1);
+}
+
+static void print_verbose(uint8_t* payload) {
+	ip_header_t* header = (ip_header_t*)payload;
+	uint16_t	 size = ntohs(header->length) - IP_HEADER_SIZE;
+	struct icmp* icmp = (struct icmp*)((uint8_t*)payload + IP_HEADER_SIZE);
+
+	print_raw_ip((uint16_t*)payload);
+	print_ip_header(header);
+	print_icmp(icmp, size);
+}
+
+static void print_raw_ip(uint16_t* payload) {
+	printf("IP Hdr Dump:\n");
+	for (int i = 0; i < (IP_HEADER_SIZE / 2); ++i) {
+		printf(" %04hx", ntohs(((uint16_t*)payload)[i]));
+	}
+}
+
+static void print_ip_header(ip_header_t* header) {
+	printf("\nVr HL TOS  Len   ID Flg  off TTL Pro  cks      Src      Dst     Data");
+	printf("\n%x   %x  %02x %04x %04x   %x %04x  %02x  %02x %04x %s", header->version,
+		   header->hdrlen, ntohs(header->dscp), ntohs(header->length), ntohs(header->ident),
+		   get_flags(header->flags_off), get_off(header->flags_off), header->ttl, header->protocol,
+		   ntohs(header->checksum), inet_ntoa(*(struct in_addr*)&header->srcip));
+	printf("  %s\n", inet_ntoa(*(struct in_addr*)&header->dstip));
+}
+
+static inline uint8_t get_flags(uint16_t flags_off) {
+	uint16_t tmp = ntohs(flags_off) >> 13;
+	return ((uint8_t)tmp);
+}
+
+static inline uint16_t get_off(uint16_t flags_off) {
+	return (ntohs(flags_off) & 0x1FFF);
+}
+
+static void print_icmp(struct icmp* icmp, uint16_t size) {
+	printf("ICMP: type %d, code %d, size %d, id 0x%04x, seq 0x%04x\n", icmp->icmp_type,
+		   icmp->icmp_code, size, ntohs(icmp->icmp_id), ntohs(icmp->icmp_seq));
 }
