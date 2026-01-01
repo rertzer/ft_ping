@@ -18,7 +18,7 @@ struct sockaddr_in* init_host(const char* const hostname) {
 static struct addrinfo* get_host_info(const char* const hostname) {
 	struct addrinfo hints, *host;
 	bzero(&hints, sizeof(hints));
-	hints.ai_flags = AI_CANONNAME;
+	hints.ai_family = AF_INET;
 
 	if (getaddrinfo(hostname, NULL, &hints, &host) != 0) {
 		error(EXIT_FAILURE, 0, "unknown host");
