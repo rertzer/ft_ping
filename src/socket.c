@@ -21,6 +21,7 @@ static void		print_verbose(uint8_t* payload);
 static void		print_raw_ip(uint16_t* payload);
 static void		print_ip_header(ip_header_t* header);
 static void		print_icmp(struct icmp* icmp, uint16_t size);
+static size_t	get_ip_header_size(uint8_t* ip);
 static uint8_t	get_flags(uint16_t flags_off);
 static uint16_t get_off(uint16_t flags_off);
 
@@ -50,7 +51,6 @@ double read_socket(socket_t sock, icmp_info_t* icmp_info) {
 	packet.len = recv(sock.fd, buff, SOCKET_RECEIVE_BUFFER_SIZE, 0);
 
 	if (packet.len > 0) {
-		packet.len -= IP_HEADER_SIZE;
 		update_packet(&packet, buff);
 
 		if (packet.icmp->icmp_type == 0) {
@@ -64,10 +64,16 @@ double read_socket(socket_t sock, icmp_info_t* icmp_info) {
 }
 
 static void update_packet(packet_t* packet, uint8_t* buff) {
-	packet->raw = ((uint8_t*)buff + IP_HEADER_SIZE + ICMP_TIME_EXCEED_HEADER_SIZE);
+	size_t ip_header_size = get_ip_header_size(buff);
+	packet->len -= ip_header_size;
+	packet->raw = ((uint8_t*)buff + ip_header_size + ICMP_TIME_EXCEED_HEADER_SIZE);
 	packet->ttl = ((ip_header_t*)buff)->ttl;
 	packet->source = ((ip_header_t*)buff)->srcip;
-	packet->icmp = (struct icmp*)((uint8_t*)buff + IP_HEADER_SIZE);
+	packet->icmp = (struct icmp*)((uint8_t*)buff + ip_header_size);
+}
+
+static inline size_t get_ip_header_size(uint8_t* ip) {
+	return ((size_t)((ip_header_t*)ip)->hdrlen * 4);
 }
 
 static double get_time(struct icmp* icmp) {
@@ -95,7 +101,8 @@ static double handle_echo_reply(packet_t* packet, icmp_info_t* icmp_info) {
 }
 
 static void handle_other_icmp(packet_t* packet, icmp_info_t* icmp_info) {
-	struct icmp* origin_icmp = (struct icmp*)((uint8_t*)(packet->raw) + IP_HEADER_SIZE);
+	struct icmp* origin_icmp =
+		(struct icmp*)((uint8_t*)(packet->raw) + get_ip_header_size(packet->raw));
 
 	if (ntohs(origin_icmp->icmp_id) == icmp_info->pid) {
 		if (packet->icmp->icmp_type == ICMP_TIME_EXCEEDED) {
